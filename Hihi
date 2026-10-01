@@ -1,0 +1,276 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+if PlayerGui:FindFirstChild("FlyMenuGui") then
+    PlayerGui:FindFirstChild("FlyMenuGui"):Destroy()
+end
+
+local FlyMenuGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local ContentFrame = Instance.new("ScrollingFrame")
+local MinimizeButton = Instance.new("TextButton")
+local SmallBubble = Instance.new("TextButton")
+local UIListLayout = Instance.new("UIListLayout")
+
+FlyMenuGui.Name = "FlyMenuGui"
+FlyMenuGui.Parent = PlayerGui
+FlyMenuGui.ResetOnSpawn = false
+
+local function makeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 250, 0, 270)
+MainFrame.Position = UDim2.new(0.5, -125, 0.4, -135)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = FlyMenuGui
+makeDraggable(MainFrame)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = MainFrame
+
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -40, 0, 40)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "MENU TÙY CHỈNH"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 18
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -35, 0, 5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.TextSize = 20
+MinimizeButton.Parent = MainFrame
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 5)
+btnCorner.Parent = MinimizeButton
+
+SmallBubble.Name = "SmallBubble"
+SmallBubble.Size = UDim2.new(0, 50, 0, 50)
+SmallBubble.Position = UDim2.new(0.1, 0, 0.5, -25)
+SmallBubble.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+SmallBubble.Text = "M"
+SmallBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
+SmallBubble.Font = Enum.Font.SourceSansBold
+SmallBubble.TextSize = 22
+SmallBubble.Visible = false
+SmallBubble.Parent = FlyMenuGui
+makeDraggable(SmallBubble)
+local bubbleCorner = Instance.new("UICorner")
+bubbleCorner.CornerRadius = UDim.new(1, 0)
+bubbleCorner.Parent = SmallBubble
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    SmallBubble.Visible = true
+    SmallBubble.Position = UDim2.new(0, MainFrame.AbsolutePosition.X + 100, 0, MainFrame.AbsolutePosition.Y + 110)
+end)
+
+SmallBubble.MouseButton1Click:Connect(function()
+    SmallBubble.Visible = false
+    MainFrame.Visible = true
+end)
+
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -20, 1, -50)
+ContentFrame.Position = UDim2.new(0, 10, 0, 45)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 220)
+ContentFrame.ScrollBarThickness = 4
+ContentFrame.Parent = MainFrame
+
+UIListLayout.Parent = ContentFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
+
+local function createSlider(name, min, max, default, callback)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(1, -10, 0, 50)
+    sliderFrame.BackgroundTransparency = 1
+    sliderFrame.Parent = ContentFrame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.Text = name .. ": " .. default
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.BackgroundTransparency = 1
+    label.Parent = sliderFrame
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, 0, 0, 8)
+    track.Position = UDim2.new(0, 0, 0, 25)
+    track.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    track.BorderSizePixel = 0
+    track.Parent = sliderFrame
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+    bar.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    bar.BorderSizePixel = 0
+    bar.Parent = track
+
+    local function updateSlider(input)
+        local posX = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+        bar.Size = UDim2.new(posX, 0, 1, 0)
+        local value = math.floor(min + (posX * (max - min)))
+        label.Text = name .. ": " .. value
+        callback(value)
+    end
+
+    track.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            updateSlider(input)
+            local connection
+            connection = UserInputService.InputChanged:Connect(function(changed)
+                if changed.UserInputType == Enum.UserInputType.MouseMovement or changed.UserInputType == Enum.UserInputType.Touch then
+                    updateSlider(changed)
+                end
+            end)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then connection:Disconnect() end
+            end)
+        end
+    end)
+end
+
+local function createToggle(name, callback)
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(1, -10, 0, 35)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    toggleButton.Text = name .. ": TẮT"
+    toggleButton.TextColor3 = Color3.fromRGB(255, 70, 70)
+    toggleButton.Font = Enum.Font.SourceSansBold
+    toggleButton.TextSize = 15
+    toggleButton.Parent = ContentFrame
+    
+    local tCorner = Instance.new("UICorner")
+    tCorner.CornerRadius = UDim.new(0, 6)
+    tCorner.Parent = toggleButton
+
+    local enabled = false
+    toggleButton.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        if enabled then
+            toggleButton.Text = name .. ": BẬT"
+            toggleButton.TextColor3 = Color3.fromRGB(70, 255, 70)
+            toggleButton.BackgroundColor3 = Color3.fromRGB(55, 65, 55)
+        else
+            toggleButton.Text = name .. ": TẮT"
+            toggleButton.TextColor3 = Color3.fromRGB(255, 70, 70)
+            toggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        end
+        callback(enabled)
+    end)
+end
+
+local walkSpeedSetting = 16
+local jumpPowerSetting = 50
+local flySpeedSetting = 50
+local flyEnabled = false
+
+local function setupCharacter(char)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+    if not humanoid then return end
+    humanoid.WalkSpeed = walkSpeedSetting
+    humanoid.JumpPower = jumpPowerSetting
+    
+    humanoid.Changed:Connect(function()
+        if humanoid and humanoid.Parent then
+            humanoid.WalkSpeed = walkSpeedSetting
+            humanoid.JumpPower = jumpPowerSetting
+        end
+    end)
+end
+
+if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
+LocalPlayer.CharacterAdded:Connect(setupCharacter)
+
+createSlider("Tốc độ chạy", 16, 250, 16, function(value)
+    walkSpeedSetting = value
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+end)
+
+createSlider("Tốc độ nhảy", 50, 300, 50, function(value)
+    jumpPowerSetting = value
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = value
+    end
+end)
+
+createSlider("Tốc độ bay", 10, 300, 50, function(value)
+    flySpeedSetting = value
+end)
+
+local bodyGyro, bodyVelocity
+createToggle("Chế độ Bay", function(state)
+    flyEnabled = state
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    if flyEnabled then
+        bodyGyro = Instance.new("BodyGyro")
+        bodyVelocity = Instance.new("BodyVelocity")
+        
+        bodyGyro.P = 9e4
+        bodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.cframe = char.HumanoidRootPart.CFrame
+        bodyGyro.Parent = char.HumanoidRootPart
+        
+        bodyVelocity.velocity = Vector3.new(0, 0.1, 0)
+        bodyVelocity.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        bodyVelocity.Parent = char.HumanoidRootPart
+        
+        if char:FindFirstChild("Humanoid") then
+            char.Humanoid.PlatformStand = true
+        end
+    else
+        if bodyGyro then bodyGyro:Destroy() end
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if char:FindFirstChild("Humanoid") then
+            char.Humanoid.PlatformStand = false
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+  
